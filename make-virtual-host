@@ -1,0 +1,19 @@
+#!/bin/bash
+# Automated vhost setup on AWS Linux
+# place into /usr/bin directory and chmod 755
+
+echo "Enter the domain name:"
+read domainname
+echo "Enter the full path to your web directory"
+echo "For example: /var/www/html/mysite"
+read rootpath
+if [ -f /etc/httpd/conf.d/vhost.conf ]
+  then
+    echo "/etc/httpd/conf.d/vhost.conf exists."
+  else
+    touch /etc/httpd/conf.d/vhost.conf
+    echo "Created /etc/httpd/conf.d/vhost.conf"
+fi
+
+echo -e "<VirtualHost *>\nServerName $domainname\nDocumentRoot $rootpath\n</VirtualHost>" >> /etc/httpd/conf.d/vhost.conf
+echo "Done. Time to restart Apache!"
