@@ -3,10 +3,10 @@
 # Place this script in /usr/bin directory and chmod 755
 
 echo "#####################################################################"
-echo "# Welcome to the Amazon Linux vhost/user/sftp configuration script.
-echo "# Ensure you have installed httpd24 through yum and updated your 
-echo "# sshd_config (to use "internal-sftp" for SFTP) prior to running.
-echo "# You will be prompted for a domain name and username.
+echo "# Welcome to the Amazon Linux vhost/user/sftp configuration script."
+echo "# Ensure you have installed httpd24 through yum and updated your"
+echo "# sshd_config (to use "internal-sftp" for SFTP) prior to running."
+echo "# You will be prompted for a domain name and username."
 echo "#####################################################################"
 
 echo "\nEnter a domain name:"
