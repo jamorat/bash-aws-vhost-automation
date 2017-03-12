@@ -11,23 +11,20 @@ Bash script for Amazon Linux AMI that automatically sets up webhosting (based on
 Automates common tasks, reduces the need to edit files, reduces key strokes.
 
 
-Assumptions<br>
-----------------<br>
+#Assumptions
 Using Amazon Linux AMI<br>
 Installed httpd24 through yum<br>
 Updated default home directory permissions to 755 (in /etc/login.defs)<br>
 Modified sftp subsystem in /etc/ssh/sshd_config to internal-sftp<br>
 
 
-Installation<br>
-----------------<br>
+#Installation
 Place the "make-vhost" bash script into /usr/bin<br>
 chmod 755<br>
 sudo make-vhost<br>
 
 
-How It Works<br>
-----------------<br>
+#How It Works
 Script checks /etc/httpd/conf.d to see if vhost.conf exists<br>
 Script creates vhost.conf if it does not already exist<br>
 Script prompts for domain name and username for the new site<br>
