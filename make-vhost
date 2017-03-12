@@ -9,7 +9,7 @@ echo "# sshd_config (to use "internal-sftp" for SFTP) prior to running."
 echo "# You will be prompted for a domain name and username."
 echo "#####################################################################"
 
-echo "\nEnter a domain name:"
+echo -e "\nEnter a domain name:"
 read domainname
 echo -e "\n\nEnter a username for this domain (for DocumentRoot and SFTP access)"
 read websiteuser
