@@ -19,22 +19,28 @@ then
     touch /etc/httpd/conf.d/vhost.conf
 fi
 
-useradd $websiteuser -s /sbin/nologin >/dev/null 2>&1
-chown root:$websiteuser /home/$websiteuser >/dev/null 2>&1
-mkdir /home/$websiteuser/public_html >/dev/null 2>&1
-chown -R $websiteuser:apache /home/$websiteuser/public_html >/dev/null 2>&1
-chmod 2750 /home/$websiteuser/public_html >/dev/null 2>&1
+# Create user and set permissions
+useradd $websiteuser -s /sbin/nologin
+chown root:$websiteuser /home/$websiteuser
+mkdir /home/$websiteuser/public_html
+chown -R $websiteuser:apache /home/$websiteuser/public_html
+chmod 2750 /home/$websiteuser/public_html
 
+# Update configuration files
 echo -e "\n<VirtualHost *:80>\nServerName $domainname\nDocumentRoot /home/$websiteuser/public_html\n</VirtualHost>" >> /etc/httpd/conf.d/vhost.conf
 echo -e "\n\nMatch User $websiteuser\nChrootDirectory /home/$websiteuser\nForceCommand internal-sftp\nAllowTCPForwarding no\nX11Forwarding no" >> /etc/ssh/sshd_config
 
-mkdir /home/$websiteuser/.ssh >/dev/null 2>&1
+# Create and apply keys to new user
+mkdir /home/$websiteuser/.ssh
 ssh-keygen -t rsa -b 2048 -C "$websiteuser for $domainname" -N "" -f "/home/$websiteuser/.ssh/id_rsa" -q
-chmod -R 700 /home/$websiteuser/.ssh >/dev/null 2>&1
-chown -R $websiteuser:$websiteuser /home/$websiteuser/.ssh >/dev/null 2>&1
+chmod -R 700 /home/$websiteuser/.ssh
+chown -R $websiteuser:$websiteuser /home/$websiteuser/.ssh
 mv /home/$websiteuser/.ssh/id_rsa.pub /home/$websiteuser/.ssh/authorized_keys
+cat /home/ec2-user/.ssh/authorized_keys >> /home/$websiteuser/.ssh/authorized_keys
 
+# Prompt to print new private key to screen
 echo -e "\n\nWould you like to retreive the new user's private key now (for SFTP access)? (y/n):"
+echo -e "(Note: the ec2-user's key will automatically by authorized for SFTP login to the new user's account)"
 read keyresponse
 if [ "$keyresponse" == "y" ]
 then
@@ -43,7 +49,7 @@ then
   echo -e "\n"
 fi
 
-echo -e "\n\nConfiguration completed. Would you like to reload Apache and SSHD now? (y/n):"
+echo -e "\n\nConfiguration completed. Would you like to reload HTTPD and SSHD now? (y/n):"
 read reloadresponse
 if [ "$reloadresponse" == "y" ]
 then
@@ -51,4 +57,16 @@ then
   service sshd reload
 fi
 
-echo -e "\n\nALL DONE. \n\nUpdate DNS and your site will be accessible at http://$domainname. Use the SFTP username and key to connect and upload files.\n"
+echo -e "\n\n##################################################"
+echo "# Summary"
+echo "##################################################"
+echo "# DOMAIN: $domainname"
+echo "# USER: $websiteuser"
+echo "# HOME DIRECTORY: /home/$websiteuser"
+echo "# DOCUMENT ROOT: /home/$websiteuser/public_html"
+echo "# KEYPAIR LOCATION: /home/$websiteuser/.ssh"
+echo "# PRIVATE KEY RETRIEVED?: $keyresponse"
+echo "# SERVICES RELOADED?: $reloadresponse"
+echo "##################################################"
+
+echo -e "\nThat is it. \n\nUpdate DNS and your site will be accessible at http://$domainname. Use the SFTP username and key to connect and upload files.\n"
