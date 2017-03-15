@@ -11,7 +11,7 @@ Bash script for Amazon Linux AMI that automatically sets up webhosting (based on
 Automates common tasks, reduces the need to edit files, reduces key strokes.
 
 
-#Assumptions
+<strong>Assumptions</strong>
 
 Using Amazon Linux AMI<br>
 Installed httpd24 through yum<br>
@@ -19,14 +19,14 @@ Updated default home directory permissions to 755 (in /etc/login.defs)<br>
 Modified sftp subsystem in /etc/ssh/sshd_config to internal-sftp<br>
 
 
-#Installation
+<strong>Installation</strong>
 
 sudo wget https://raw.githubusercontent.com/neil-sabol/bash-aws-vhost-sftp-chroot-automation/master/make-vhost -O /usr/bin/make-vhost<br>
 sudo chmod 755 /usr/bin/make-vhost<br>
 sudo /usr/bin/make-vhost<br>
 
 
-#How It Works
+<strong>How It Works</strong>
 
 Scripts checks for root access and presence of httpd 2.4 (installed through yum/rpm)
 Script prompts for domain name and username for the new site<br>
