@@ -4,7 +4,14 @@
 
 # Ensure this script is being run as root
 if [[ $EUID -ne 0 ]]; then
-  echo "This script must be run as root. Try: sudo make-vhost" 2>&1
+  echo -e "This script must be run as root. Try: 'sudo /usr/bin/make-vhost'\n" 2>&1
+  exit 1
+fi
+
+# Ensure httpd 2.4 is installed via yum/rpm
+rpm -q httpd24
+if [[ $? -ne 0 ]]; then
+  echo -e "This ec2 instance appears to be missing httpd 2.4 (yum/rpm). Run: 'yum install httpd24' first.\n" 2>&1
   exit 1
 fi
 
