@@ -4,21 +4,21 @@
 
 # Ensure this script is being run as root
 if [[ $EUID -ne 0 ]]; then
-  echo -e "This script must be run as root. Try: 'sudo /usr/bin/make-vhost'\n" 2>&1
+  echo -e "\nThis script must be run as root. Try: 'sudo /usr/bin/make-vhost'\n" 2>&1
   exit 1
 fi
 
-# Ensure httpd 2.4 is installed via yum/rpm
-rpm -q httpd24 2>&1
+# Ensure some version of httpd is installed via yum/rpm
+rpm -qa | grep httpd >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
-  echo -e "This ec2 instance appears to be missing httpd 2.4 (yum/rpm). Run: 'yum install httpd24' first.\n" 2>&1
+  echo -e "\nThis ec2 instance appears to be missing httpd (yum/rpm). Run: 'yum install httpd' first.\n" 2>&1
   exit 1
 fi
 
 # Display friendly introduction
-echo "#####################################################################"
+echo -e "\n#####################################################################"
 echo "# Welcome to the Amazon Linux vhost/user/sftp configuration script."
-echo "# Ensure you have installed httpd24 through yum and updated your"
+echo "# Ensure you have installed httpd through yum and updated your"
 echo "# sshd_config (to use "internal-sftp" for SFTP) prior to running."
 echo "# You will be prompted for a domain name and username."
 echo "#####################################################################"
