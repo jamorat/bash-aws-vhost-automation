@@ -1,0 +1,91 @@
+#!/bin/bash
+# Automated account, vhost, and chrooted SFTP setup on AWS Linux
+# Place this script in /usr/bin directory and chmod 755
+
+# Ensure this script is being run as root
+if [[ $EUID -ne 0 ]]; then
+  echo -e "\nThis script must be run as root. Try: 'sudo /usr/bin/make-vhost'\n" 2>&1
+  exit 1
+fi
+
+# Ensure some version of httpd is installed via yum/rpm
+rpm -qa | grep httpd >/dev/null 2>&1
+if [[ $? -ne 0 ]]; then
+  echo -e "\nThis ec2 instance appears to be missing httpd (yum/rpm). Run: 'yum install httpd' first.\n" 2>&1
+  exit 1
+fi
+
+# Display friendly introduction
+echo -e "\n#####################################################################"
+echo "# Welcome to the Amazon Linux vhost/user/sftp configuration script."
+echo "# Ensure you have installed httpd through yum and updated your"
+echo "# sshd_config (to use "internal-sftp" for SFTP) prior to running."
+echo "# You will be prompted for a domain name and username."
+echo "#####################################################################"
+
+# Prompt for user input - domain and username
+echo -e "\nEnter a domain name:"
+read domainname
+echo -e "\n\nEnter a username for this domain (for DocumentRoot and SFTP access)"
+read websiteuser
+
+# Create vhost.conf for apache if it does not already exist
+if [ ! -f /etc/httpd/conf.d/vhost.conf ]
+then
+    touch /etc/httpd/conf.d/vhost.conf
+fi
+
+# Create user and set permissions on document root (public_html)
+useradd $websiteuser -s /sbin/nologin
+chown root:$websiteuser /home/$websiteuser
+mkdir /home/$websiteuser/public_html
+chown -R $websiteuser:apache /home/$websiteuser/public_html
+chmod 2750 /home/$websiteuser/public_html
+
+# Update configuration files vhost.conf (apache) and sshd_config (sshd)
+echo -e "\n<VirtualHost *:80>\nServerName $domainname\nDocumentRoot /home/$websiteuser/public_html\n</VirtualHost>" >> /etc/httpd/conf.d/vhost.conf
+echo -e "\n\nMatch User $websiteuser\nChrootDirectory /home/$websiteuser\nForceCommand internal-sftp\nAllowTCPForwarding no\nX11Forwarding no" >> /etc/ssh/sshd_config
+
+# Create and apply keys to new user
+mkdir /home/$websiteuser/.ssh
+ssh-keygen -t rsa -b 2048 -C "$websiteuser for $domainname" -N "" -f "/home/$websiteuser/.ssh/id_rsa" -q
+chmod -R 700 /home/$websiteuser/.ssh
+chown -R $websiteuser:$websiteuser /home/$websiteuser/.ssh
+mv /home/$websiteuser/.ssh/id_rsa.pub /home/$websiteuser/.ssh/authorized_keys
+# Add ec2-user's keys to the new user by default (for easier administration)
+cat /home/ec2-user/.ssh/authorized_keys >> /home/$websiteuser/.ssh/authorized_keys
+
+# Prompt to print new user's private key to screen
+echo -e "\n\nWould you like to retreive the new user's private key now (for SFTP access)? (y/n):"
+echo -e "(Note: the ec2-user's key will automatically by authorized for SFTP login to the new user's account)"
+read keyresponse
+if [ "$keyresponse" == "y" ]
+then
+  echo -e "\nCOPY/PASTE KEY BELOW\n"
+  cat /home/$websiteuser/.ssh/id_rsa
+  echo -e "\n"
+fi
+
+# Prompt for service reload - reload httpd and sshd if user prefers
+echo -e "\n\nConfiguration completed. Would you like to reload HTTPD and SSHD now? (y/n):"
+read reloadresponse
+if [ "$reloadresponse" == "y" ]
+then
+  service httpd reload
+  service sshd reload
+fi
+
+# Print friendly summary message
+echo -e "\n\n##################################################"
+echo "# Summary"
+echo "##################################################"
+echo "# DOMAIN: $domainname"
+echo "# USER: $websiteuser"
+echo "# HOME DIRECTORY: /home/$websiteuser"
+echo "# DOCUMENT ROOT: /home/$websiteuser/public_html"
+echo "# KEYPAIR LOCATION: /home/$websiteuser/.ssh"
+echo "# PRIVATE KEY RETRIEVED?: $keyresponse"
+echo "# SERVICES RELOADED?: $reloadresponse"
+echo "##################################################"
+
+echo -e "\nThat is it. \n\nUpdate DNS and your site will be accessible at http://$domainname. Use the SFTP username and key to connect and upload files.\n"
