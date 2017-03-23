@@ -14,7 +14,7 @@ Automates common tasks, reduces the need to edit files, reduces key strokes.
 <strong>Assumptions</strong>
 
 Using Amazon Linux AMI<br>
-Installed httpd24 through yum<br>
+Installed httpd through yum<br>
 Updated default home directory permissions to 755 (in /etc/login.defs)<br>
 Modified sftp subsystem in /etc/ssh/sshd_config to internal-sftp<br>
 
@@ -28,7 +28,7 @@ sudo /usr/bin/make-vhost<br>
 
 <strong>How It Works</strong>
 
-Scripts checks for root access and presence of httpd 2.4 (installed through yum/rpm)
+Scripts checks for root access and presence of httpd (installed through yum/rpm)
 Script prompts for domain name and username for the new site<br>
 Script checks /etc/httpd/conf.d to see if vhost.conf exists (creates it if not)<br>
 New user is created, along with public_html document root under their home directory<br>
