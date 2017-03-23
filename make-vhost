@@ -15,6 +15,15 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
+# Ensure sshd_config is updated to use the internal sftp subsystem
+grep -i "Subsystem sftp internal-sftp" /etc/ssh/sshd_config >/dev/null 2>&1
+if [[ $? -ne 0 ]]; then
+  echo -e "\n----------------------------------------------------------------------"
+  echo "WARNING - it appears sshd is not using internal-sftp as the sftp subsystem. Another subsystem may be specified."
+  echo "Chrooted SFTP accounts will not work until this is rectified. Check /etc/ssh/sshd_config."
+  echo -e "----------------------------------------------------------------------\n"
+fi
+
 # Display friendly introduction
 echo -e "\n#####################################################################"
 echo "# Welcome to the Amazon Linux vhost/user/sftp configuration script."
