@@ -1,5 +1,5 @@
 # Bash script(s) for easy, shared tenancy webhosting setup on Amazon AWS (AMI Linux)
-<hr>
+
 Bash script(s) for Amazon Linux AMI that automatically set up webhosting (based on user input in the terminal) as follows:
    
    * New virtual hosts by creating new nodes in the config file (vhost.conf)<br>
