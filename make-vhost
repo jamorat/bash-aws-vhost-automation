@@ -18,10 +18,9 @@ fi
 # Ensure sshd_config is updated to use the internal sftp subsystem
 grep -i "Subsystem sftp internal-sftp" /etc/ssh/sshd_config >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
-  echo -e "\n----------------------------------------------------------------------"
-  echo "WARNING - it appears sshd is not using internal-sftp as the sftp subsystem. Another subsystem may be specified."
-  echo "Chrooted SFTP accounts will not work until this is rectified. Check /etc/ssh/sshd_config."
-  echo -e "----------------------------------------------------------------------\n"
+  sftpwarning="Chrooted SFTP accounts will not work (SSHD NOT using internal-sftp)."
+else
+  sftpwarning="none"
 fi
 
 # Display friendly introduction
@@ -95,6 +94,7 @@ echo "# DOCUMENT ROOT: /home/$websiteuser/public_html"
 echo "# KEYPAIR LOCATION: /home/$websiteuser/.ssh"
 echo "# PRIVATE KEY RETRIEVED?: $keyresponse"
 echo "# SERVICES RELOADED?: $reloadresponse"
+echo "# WARNING(S): $sftpwarning"
 echo "##################################################"
 
 echo -e "\nThat is it. \n\nUpdate DNS and your site will be accessible at http://$domainname. Use the SFTP username and key to connect and upload files.\n"
