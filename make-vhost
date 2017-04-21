@@ -45,6 +45,10 @@ fi
 
 # Create user and set permissions on document root (public_html)
 useradd $websiteuser -s /sbin/nologin
+if [[ $? -ne 0 ]]; then
+  echo -e "\n**FAILED TO CREATE NEW USER - PROCESS ABORTED**" 2>&1
+  exit 1
+fi
 chown root:$websiteuser /home/$websiteuser
 mkdir /home/$websiteuser/public_html
 chown -R $websiteuser:apache /home/$websiteuser/public_html
@@ -65,7 +69,6 @@ cat /home/ec2-user/.ssh/authorized_keys >> /home/$websiteuser/.ssh/authorized_ke
 
 # Prompt to print new user's private key to screen
 echo -e "\n\nWould you like to retreive the new user's private key now (for SFTP access)? (y/n):"
-echo -e "(Note: the ec2-user's key will automatically by authorized for SFTP login to the new user's account)"
 read keyresponse
 if [ "$keyresponse" == "y" ]
 then
