@@ -55,7 +55,7 @@ chown -R $websiteuser:apache /home/$websiteuser/public_html
 chmod 2750 /home/$websiteuser/public_html
 
 # Update configuration files vhost.conf (apache) and sshd_config (sshd)
-echo -e "\n<VirtualHost *:80>\nServerName $domainname\nDocumentRoot /home/$websiteuser/public_html\n</VirtualHost>" >> /etc/httpd/conf.d/vhost.conf
+echo -e "\n<VirtualHost *:80>\nServerName $domainname\nDocumentRoot /home/$websiteuser/public_html\n# Add other directives below this line\n</VirtualHost>" >> /etc/httpd/conf.d/vhost.conf
 echo -e "\n\nMatch User $websiteuser\nChrootDirectory /home/$websiteuser\nForceCommand internal-sftp\nAllowTCPForwarding no\nX11Forwarding no" >> /etc/ssh/sshd_config
 
 # Create and apply keys to new user
