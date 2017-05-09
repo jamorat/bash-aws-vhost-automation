@@ -1,0 +1,132 @@
+#!/bin/bash
+# Automated ssl vhost creation (Apache) and Let's Encrypt certificate procurement on AWS Linux
+# Installs and uses Neil Pang's (@Neilpang) acme.sh for certificate procurement
+# Place this script in /usr/bin directory and chmod 755
+
+# Ensure this script is being run as root
+if [[ $EUID -ne 0 ]]; then
+  echo -e "This script must be run as root. Try: 'sudo /usr/bin/make-vhost-ssl'\n" 2>&1
+  exit 1
+fi
+
+# Ensure httpd is installed via yum/rpm
+rpm -qa | grep httpd >/dev/null 2>&1
+if [[ $? -ne 0 ]]; then
+  echo -e "This ec2 instance appears to be missing httpd (yum/rpm). Run: 'yum install httpd' first.\n" 2>&1
+  exit 1
+fi
+
+# Check for mod_ssl
+rpm -qa | grep "_ssl" >/dev/null 2>&1
+if [[ $? -ne 0 ]]; then
+  echo -e "This ec2 instance appears to be missing mod_ssl for httpd (yum/rpm). Run: 'yum install mod(xx)_ssl' first.\n" 2>&1
+  exit 1
+fi
+
+# Check for @Neilpang's acme.sh, install if needed
+# https://github.com/Neilpang/acme.sh
+# Awesome bash interface for LetsEncrypt created by a much wiser Neil than myself
+if [ ! -d "/root/.acme.sh" ]; then
+  echo -e "\nNeilpang's acme.sh not found in expected location, attempting to install...\n" 2>&1
+  if [ ! -d "/etc/letsencrypt" ]; then
+     mkdir /etc/letsencrypt
+     chmod 750 /etc/letsencrypt
+     chown root:apache /etc/letsencrypt
+  fi
+  cd /tmp
+  git clone https://github.com/Neilpang/acme.sh.git >/dev/null 2>&1
+  if [[ $? -ne 0 ]]; then
+    echo -e "\n**UNABLE TO CLONE ACME.SH REPOSITORY - PROCESS ABORTED (ENSURE GIT IS INSTALLED AND WORKING)**\n"
+    exit 1
+  fi
+  cd acme.sh
+  ./acme.sh --install --certhome /etc/letsencrypt >/dev/null 2>&1
+  if [[ $? -ne 0 ]]; then
+    echo -e "\n**ACME.SH INSTALL FAILED - PROCESS ABORTED**\n"
+    rm -rf /tmp/acme.sh
+    exit 1
+  fi
+  rm -rf /tmp/acme.sh
+  echo -e "\nNeilpang's acme.sh successfully installed.\n" 2>&1
+fi
+
+# Check vhosts available for ssl implementation, list findings
+grep "ServerName" /etc/httpd/conf.d/vhost.conf | sort | uniq -c | grep "1 ServerName" >/dev/null 2>&1
+if [[ $? -ne 0 ]]; then
+  echo -e "It appears this instance has no vhost eligible for SSL. Create an HTTP vhost with make-vhost first, then rerun make-vhost-ssl.\n" 2>&1
+  exit 1
+fi
+
+# Display friendly introduction
+echo -e "\n#####################################################################"
+echo "# Welcome to the Amazon Linux HTTPS/SSL vhost creation script."
+echo "# You will be prompted to select an existing HTTP vhost (created"
+echo "# with the make-vhost script) to create an SSL/HTTPS vhost for."
+echo "#####################################################################"
+
+# Display list of eligible vhosts - any ServerName that exists in only 1 vhost directive
+# Provide numeric selection menu
+echo -e "\nEligible vhosts:\n"
+
+ssl_ready_vhosts=( $(grep "ServerName" /etc/httpd/conf.d/vhost.conf | sort | uniq -c | grep "1 ServerName" | awk '{print $3}') )
+for i in "${ssl_ready_vhosts[@]}"
+do
+   ((j++))
+   echo -e "[$j] $i"
+done
+
+# Prompt for vhost selection
+echo -e "\nEnter the number corresponding to the vhost you want to SSL enable:"
+read sslvhostselection
+
+# Convert human-friendly index back to array index to obtain domain name
+# Extract documentroot from vhost, assuming it appears on the line after the servername
+((sslvhostselection--))
+domainname=${ssl_ready_vhosts[$sslvhostselection]}
+documentroot=`grep -A1 $domainname /etc/httpd/conf.d/vhost.conf | grep DocumentRoot | awk '{print $2}'`
+
+# Sanity check - ensure extracted DocumentRoot exists
+if [ ! -d "$documentroot" ]; then
+   echo -e "\n**FAILED TO ACCURATELY DETERMINE DOCUMENT ROOT - PROCESS ABORTED**\n" 2>&1
+   exit 1
+fi
+
+# Confirm DocumentRoot to prevent accidents
+echo -e "\nDocumentRoot for selected vhost detected as: $documentroot."
+echo -e "Is that correct? (y/n)"
+read correctdocroot
+
+if [ ! "$correctdocroot" == "y" ]
+then
+   echo -e "\n**DOCUMENT ROOT INCORRECT - PROCESS ABORTED BY USER**\n" 2>&1
+   exit 1
+fi
+
+# Run acme.sh to procure certificates
+# NOTE: experimental on Amazon Linux
+echo -e "\nProcuring certificates with acme.sh...\n" 2>&1
+/root/.acme.sh/acme.sh.env >/dev/null 2>&1
+/root/.acme.sh/acme.sh --issue -d $domainname -w "$documentroot"
+
+# Create SSL vhost
+echo -e "\n<VirtualHost *:443>\nServerName $domainname\nDocumentRoot $documentroot\nSSLEngine on\nSSLCertificateFile /etc/letsencrypt/$domainname/fullchain.cer\nSSLCertificateKeyFile /etc/letsencrypt/$domainname/$domainname.key\n# Add other directives below this line\n</VirtualHost>" >> /etc/httpd/conf.d/vhost.conf
+
+# Prompt for service reload - reload httpd and sshd if user prefers
+echo -e "\n\nConfiguration completed. Would you like to reload HTTPD now? (y/n):"
+read reloadresponse
+if [ "$reloadresponse" == "y" ]
+then
+  service httpd reload
+fi
+
+# Print friendly summary message
+echo -e "\n\n##################################################"
+echo "# Summary"
+echo "##################################################"
+echo "# DOMAIN: $domainname"
+echo "# DOCUMENT ROOT: /home/$websiteuser/public_html"
+echo "# CERTIFICATE AND KEY LOCATION: /etc/letsencrypt/$domainname"
+echo "# SERVICES RELOADED?: $reloadresponse"
+echo "##################################################"
+
+echo -e "\nThat is it. \n\nYour site should be accessible at https://$domainname with a Let's Encrypt signed certificate"
