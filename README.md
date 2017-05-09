@@ -61,11 +61,11 @@ yum install -y httpd24
 ## More explicit explanation of what the scripts do:
 
 ### make-vhost
-* Prerequesite checks (run as root, presence of httpd, sshd_config)
-* Prompt for new domain and username
-* Create file /etc/httpd/conf.d/vhost.conf if it does not already exist
-* Create user and DocumentRoot (~user/public_html) and set permissions (2750) and ownership (user:apache)
-* Add new configuration section (http/80 vhost) to /etc/httpd/conf.d/vhost.conf
+1. Prerequesite checks (run as root, presence of httpd, sshd_config)
+2. Prompt for new domain and username
+3. Create file /etc/httpd/conf.d/vhost.conf if it does not already exist
+4. Create user and DocumentRoot (~user/public_html) and set permissions (2750) and ownership (user:apache)
+5. Add new configuration section (http/80 vhost) to /etc/httpd/conf.d/vhost.conf
 ```
 <VirtualHost *:80>
 ServerName my.new.url
@@ -73,7 +73,7 @@ DocumentRoot /home/user/public_html
 # Add other directives below this line
 </VirtualHost>
 ```
-* Add new configuration section to /etc/ssh/sshd_config
+6. Add new configuration section to /etc/ssh/sshd_config
 ```
 Match User user
 ChrootDirectory /home/user
@@ -81,24 +81,24 @@ ForceCommand internal-sftp
 AllowTCPForwarding no
 X11Forwarding no
 ```
-* Create 2048 bit RSA keypair for new user (~user/.ssh/id_rsa and id_rsa.pub)
-* Add ec2-user's public key (~/ec2-user/.ssh/authorized_keys) to user's account (~user/.ssh/authorized_keys)
-* Prompt for service (httpd and sshd) reload
+7. Create 2048 bit RSA keypair for new user (~user/.ssh/id_rsa and id_rsa.pub)
+8. Add ec2-user's public key (~/ec2-user/.ssh/authorized_keys) to user's account (~user/.ssh/authorized_keys)
+9. Prompt for service (httpd and sshd) reload
 
 ### make-vhost-ssl
-* Prerequisite checks (run as root, presence of httpd/mod_ssl, sshd_config, Neil Pang's acme.sh)
-* Installs acme.sh if not found (installs for root, certificate directory /etc/letsencrypt)
+1. Prerequisite checks (run as root, presence of httpd/mod_ssl, sshd_config, Neil Pang's acme.sh)
+2. Installs acme.sh if not found (installs for root, certificate directory /etc/letsencrypt)
 ```
 acme.sh --install --certhome /etc/letsencrypt
 ```
-* Prompt for new domain based on existing (http/port 80) vhosts in /etc/httpd/conf.d/vhost.conf
-* Process selected vhost, extract document root, ensure it exists, and prompt for correctness
-* Run acme.sh to procure certificates for the domain from Let's Encrypt
+3. Prompt for new domain based on existing (http/port 80) vhosts in /etc/httpd/conf.d/vhost.conf
+4. Process selected vhost, extract document root, ensure it exists, and prompt for correctness
+5. Run acme.sh to procure certificates for the domain from Let's Encrypt
 ```
 /root/.acme.sh/acme.sh.env
 /root/.acme.sh/acme.sh --issue -d $domainname -w $documentroot
 ```
-* Add new configuration section (https/443 vhost) to /etc/httpd/conf.d/vhost.conf
+6. Add new configuration section (https/443 vhost) to /etc/httpd/conf.d/vhost.conf
 ```
 <VirtualHost *:443>
 ServerName my.new.url
@@ -109,4 +109,4 @@ SSLCertificateKeyFile /etc/letsencrypt/my.new.url/my.new.url.key
 # Add other directives below this line
 </VirtualHost>
 ```
-* Prompt for service (httpd and sshd) reload
+7. Prompt for service (httpd and sshd) reload
