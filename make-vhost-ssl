@@ -83,7 +83,7 @@ read sslvhostselection
 # Extract documentroot from vhost, assuming it appears on the line after the servername
 ((sslvhostselection--))
 domainname=${ssl_ready_vhosts[$sslvhostselection]}
-documentroot=`grep -A1 $domainname /etc/httpd/conf.d/vhost.conf | grep DocumentRoot | awk '{print $2}'`
+documentroot=`grep -A1 ".* $domainname" /etc/httpd/conf.d/vhost.conf | grep DocumentRoot | awk '{print $2}'`
 
 # Sanity check - ensure extracted DocumentRoot exists
 if [ ! -d "$documentroot" ]; then
