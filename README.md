@@ -12,10 +12,9 @@ Automates common tasks, reduces the need to edit multiple files, reduces key str
 
 
 ## Installation
->sudo wget https://raw.githubusercontent.com/neil-sabol/bash-aws-vhost-sftp-chroot-automation/master/make-vhost -O /usr/bin/make-vhost<br><br>
->sudo wget https://raw.githubusercontent.com/neil-sabol/bash-aws-vhost-sftp-chroot-automation/master/make-vhost-ssl -O /usr/bin/make-vhost-ssl<br><br>
->sudo chmod 755 /usr/bin/make-vhost*<br>
-
+copy make-vhost into /usr/bin/make-vhost
+copy make-vhost-ssl into /usr/bin/make-vhost
+sudo chmod 755 /usr/bin/make-vhost*
 
 ## Usage
 >sudo make-vhost<br>
