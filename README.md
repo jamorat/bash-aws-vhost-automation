@@ -21,10 +21,9 @@ Modified sftp subsystem in /etc/ssh/sshd_config to internal-sftp<br>
 
 <strong>Installation</strong>
 
-sudo wget https://raw.githubusercontent.com/neil-sabol/bash-aws-vhost-sftp-chroot-automation/master/make-vhost -O /usr/bin/make-vhost<br>
-sudo chmod 755 /usr/bin/make-vhost<br>
-sudo /usr/bin/make-vhost<br>
-
+begin with: /usr/bin/make-vhost
+sudo chmod 755 /usr/bin/make-vhost
+sudo /usr/bin/make-vhost
 
 <strong>How It Works</strong>
 
